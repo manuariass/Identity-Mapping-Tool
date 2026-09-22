@@ -95,6 +95,10 @@ ul.lim{margin:8px 0 0;padding-inline-start:20px;font-size:13.5px}
 ul.lim li{margin-block-end:6px}
 .hide{display:none}
 footer{margin-block-start:26px;font-size:12px;color:var(--muted);text-align:center}
+.readme-launch{margin-block-start:16px}
+.readme-panel{margin-block-start:12px}
+.readme-frame{display:block;inline-size:100%;block-size:min(72vh,900px);border:1px solid var(--line);
+ border-radius:var(--r);background:var(--surface)}
 @media(max-width:640px){
   .prow,.colhead{grid-template-columns:30px minmax(0,1fr) 30px}
   .prow .vwrap,.colhead .vh{grid-column:2/4}
@@ -109,6 +113,12 @@ footer{margin-block-start:26px;font-size:12px;color:var(--muted);text-align:cent
   <h1>Identity Mapping Builder</h1>
   <p class="sub">Same wizard, reversed &mdash; you type the identity you expect, and the regular expressions and the formula are worked out for you.</p>
   <p class="src">Follows <span class="mono">learn.microsoft.com/microsoft-365/copilot/connectors/map-non-entra-id</span> and <span class="mono">/map-entra-id</span></p>
+  <div class="readme-launch">
+    <button id="readmeToggle" type="button" aria-expanded="false" aria-controls="readmePanel">Read README</button>
+  </div>
+  <div class="readme-panel" id="readmePanel" hidden>
+    <iframe class="readme-frame" title="Identity Mapping Tool README" data-src="README.html"></iframe>
+  </div>
 </header>
 
 <section class="card">
@@ -722,6 +732,17 @@ function summary(r){
 }
 
 /* ---------------- wiring ---------------- */
+$("readmeToggle").addEventListener("click", function(){
+  var btn = $("readmeToggle"), panel = $("readmePanel");
+  var opening = panel.hidden;
+  panel.hidden = !opening;
+  btn.setAttribute("aria-expanded", String(opening));
+  btn.textContent = opening ? "Hide README" : "Read README";
+  if(opening){
+    var frame = panel.querySelector("iframe");
+    if(!frame.src) frame.src = frame.getAttribute("data-src");
+  }
+});
 $("mode").addEventListener("change", function(e){
   state = defaults(e.target.value);
   targetTouched = false;
