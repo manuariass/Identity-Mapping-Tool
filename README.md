@@ -115,17 +115,6 @@ A Salesforce org stores the user identity in `FederationIdentifier`, and those v
 
 ---
 
-## Roadmap
-
-<!-- TODO: confirm or replace — these are suggestions based on the problem space -->
-
-- [ ] Validate generated mappings against a sample of live identities
-- [ ] Detect and warn on common anti-patterns (email-vs-UPN mismatch, unresolvable domains)
-- [ ] Expand source coverage to additional connectors
-- [ ] Export configuration for reuse across tenants
-
----
-
 ## Contributing
 
 <!-- TODO: confirm your contribution model before publishing -->
