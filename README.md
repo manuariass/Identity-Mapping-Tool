@@ -132,4 +132,3 @@ This is a community tool, not a supported Microsoft product. It generates config
 ## Further reading
 
 - [Microsoft 365 Copilot connectors overview](https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/overview-copilot-connector)
-- <!-- TODO: link to the official identity-mapping documentation -->
