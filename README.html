@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Identity Mapping Tool README</title>
+<style>
+:root{--bg:#fff;--ink:#241f33;--muted:#69627e;--line:#dcd7ea;--accent:#6c4fe0;--code:#f1eff8}
+@media(prefers-color-scheme:dark){:root{--bg:#201c2c;--ink:#eeebf6;--muted:#a49dba;--line:#3a3350;--accent:#a893ff;--code:#292338}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 "Segoe UI",system-ui,-apple-system,sans-serif}
+main{max-width:820px;margin:auto;padding:28px 32px 48px}
+h1{font-size:28px;margin:0 0 12px}h2{font-size:21px;margin:32px 0 10px}h3{font-size:17px;margin:24px 0 8px}
+p,ul,ol{margin:0 0 14px}li{margin-block-end:5px}
+a{color:var(--accent)}code{background:var(--code);padding:2px 5px;border-radius:4px;font-family:Consolas,monospace}
+blockquote{margin:16px 0;padding:10px 16px;border-inline-start:4px solid var(--accent);background:var(--code)}
+blockquote p{margin:0}hr{border:0;border-block-start:1px solid var(--line);margin:30px 0}
+table{inline-size:100%;border-collapse:collapse;margin:14px 0}th,td{border:1px solid var(--line);padding:9px 12px;text-align:start}
+@media(max-width:600px){main{padding:22px 18px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Identity-Mapping-Tool</h1>
+  <p><a href="https://manuariass.github.io/Identity-Mapping-Tool/" target="_top">Open the hosted Identity Mapping Builder</a></p>
+
+  <h1>Identity Mapping Builder for Microsoft 365 Copilot Connectors</h1>
+  <blockquote><p>Generate correct identity-mapping expressions for a Copilot connector &mdash; before a misconfiguration reaches production.</p></blockquote>
+
+  <hr>
+  <h2>Why this exists</h2>
+  <p>When a Microsoft 365 Copilot connector indexes content from a third-party system, it does not only bring in documents &mdash; <strong>it brings in permissions</strong>. Every indexed item carries an access control list (ACL) from the source system, and that ACL is expressed in the source system's own language of identity: a Salesforce <code>FederationIdentifier</code>, a ServiceNow <code>sys_id</code>, a Jira <code>AccountId</code>, an internal user record, an email alias.</p>
+  <p>Microsoft 365 security trimming understands exactly one thing: <strong>Microsoft Entra identity</strong>.</p>
+  <p>Identity mapping is the translation layer between those two worlds. It decides, for every indexed item, who is allowed to see it. Today that translation is authored <strong>by a person, by hand, during connector setup</strong> &mdash; expressions, formulas, regular expressions, property selection &mdash; and the administrator has to know how their source system stores identities and get the formula right on the first attempt.</p>
+  <p>There is no feedback loop. The expression looks valid. The connection publishes. The crawl completes successfully. <strong>Nothing tells you the mapping is wrong</strong> until users report that Copilot cannot find anything.</p>
+  <p>Incorrect identity mapping is the <strong>number one cause of access problems with data indexed by Copilot connectors</strong>, and in most cases it is not a product defect &mdash; it is human error at configuration time.</p>
+
+  <h3>What makes it hard</h3>
+  <p>Identity data is rarely clean or consistent:</p>
+  <ul>
+    <li>The same person can be an email address in one system, a username in another, and an opaque internal identifier in a third.</li>
+    <li>Some identities already exist in Entra (ME-ID). Others never will.</li>
+    <li>Contractors, service accounts, shared mailboxes, and people who have left the company complicate almost every rule you write.</li>
+    <li>A source field that <em>looks</em> like a UPN often is not &mdash; an email stored in <code>FederationIdentifier</code> that does not match the Entra UPN will silently break retrieval for every affected user.</li>
+  </ul>
+
+  <h3>The cost of getting it wrong</h3>
+  <p>When the mapping is wrong, users lose access to content they are entitled to. Copilot returns nothing. The data is indexed, but unreachable. The customer concludes that Copilot does not work, and adoption stalls &mdash; while teams spend weeks troubleshooting search quality and content coverage, when the real cause was a single expression written during setup.</p>
+  <p><strong>This tool moves that mistake from discovery-after-rollout to prevention-at-setup.</strong></p>
+
+  <hr>
+  <h2>What it does</h2>
+  <p>The Identity Mapping Builder walks you through how your data source actually stores its identities, then generates the expressions and formulas you paste into the connector configuration.</p>
+  <ol>
+    <li><strong>Classify the source identity.</strong> Determine whether the data source stores identifiers that require translation (non-ME-ID) or identities already present in Entra (ME-ID).</li>
+    <li><strong>Select the source property.</strong> Choose the field that carries the identity on indexed items.</li>
+    <li><strong>Define the desired output.</strong> Specify the Entra property to resolve against (UPN, mail, object ID).</li>
+    <li><strong>Generate the configuration.</strong> The tool produces the correct mapping expression &mdash; using the same parameters as the connector setup itself, so the result is directly usable.</li>
+    <li><strong>Review before you publish.</strong> Inspect the generated expression against sample values before committing it to the connection.</li>
+  </ol>
+  <p>Because the output uses the connector's own parameter model, there is no translation step between what the tool produces and what you paste into the admin experience.</p>
+
+  <hr>
+  <h2>Who it is for</h2>
+  <table>
+    <thead><tr><th>Audience</th><th>Use case</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Customer / tenant administrators</strong></td><td>Configuring a Copilot connector for the first time</td></tr>
+      <tr><td><strong>Support engineers</strong></td><td>Diagnosing why indexed content is not reachable for some users</td></tr>
+    </tbody>
+  </table>
+
+  <hr>
+  <h2>Getting started</h2>
+  <p>Open the <a href="https://manuariass.github.io/Identity-Mapping-Tool/" target="_top">hosted Identity Mapping Builder</a> in a modern browser. No installation is required, and all processing stays in the browser.</p>
+  <p>You need access to the data source's identity schema and permission to configure the connector in the Microsoft 365 admin center.</p>
+
+  <hr>
+  <h2>Usage</h2>
+  <h3>Example: Salesforce</h3>
+  <p>A Salesforce org stores the user identity in <code>FederationIdentifier</code>, and those values are email addresses that match the Entra UPN.</p>
+  <ol>
+    <li>Select the data source type.</li>
+    <li>Indicate that the identity is <strong>not</strong> already an Entra ID (non-ME-ID).</li>
+    <li>Choose <code>FederationIdentifier</code> as the source property.</li>
+    <li>Choose <code>userPrincipalName</code> as the Entra target property.</li>
+    <li>Copy the generated expression into the connector's identity-mapping step.</li>
+  </ol>
+  <blockquote><p><strong>Warning:</strong> If <code>FederationIdentifier</code> holds an email that does <strong>not</strong> match the Entra UPN, mapping to <code>userPrincipalName</code> will resolve to nobody and users will retrieve nothing. Verify a sample of real values before publishing &mdash; this is the single most common failure in production.</p></blockquote>
+
+  <hr>
+  <h2>Supported data sources</h2>
+  <ul><li>Supported Copilot Connectors Data Sources</li></ul>
+
+  <hr>
+  <h2>Limitations</h2>
+  <ul>
+    <li>The tool <strong>generates configuration; it does not validate against a live tenant.</strong> It cannot confirm that the identities in your source system actually resolve in Entra &mdash; verify against real sample values before publishing.</li>
+    <li>It does not detect identities that have been deprovisioned in Entra (for example, users who have left the company). Those will fail at query time regardless of how the expression is written.</li>
+    <li>It does not address ACL problems that originate in the source system or in the connector itself &mdash; only the mapping expression you author during setup.</li>
+  </ul>
+
+  <hr>
+  <h2>Contributing</h2>
+  <p>Issues and pull requests are welcome. If you hit an identity-mapping scenario the tool does not handle, please open an issue and include:</p>
+  <ul>
+    <li>The data source and the identity field involved</li>
+    <li>What the source values look like (<strong>redact real identities</strong> &mdash; use <code>user@example.com</code> style placeholders)</li>
+    <li>The Entra property you expected to resolve against</li>
+  </ul>
+  <p><strong>Never include real customer identities, tenant IDs, incident numbers, or connector credentials in an issue or pull request.</strong></p>
+
+  <hr>
+  <h2>Support</h2>
+  <p>This is a community tool, not a supported Microsoft product. It generates configuration that you remain responsible for reviewing before applying to a production connector.</p>
+
+  <hr>
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/overview-copilot-connector" target="_blank" rel="noopener noreferrer">Microsoft 365 Copilot connectors overview</a></li>
+  </ul>
+</main>
+</body>
+</html>
