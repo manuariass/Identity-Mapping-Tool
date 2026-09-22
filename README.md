@@ -129,12 +129,6 @@ This is a community tool, not a supported Microsoft product. It generates config
 
 ---
 
-## License
-
-<!-- TODO: add license — MIT is the usual choice for tools like this -->
-
----
-
 ## Further reading
 
 - [Microsoft 365 Copilot connectors overview](https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/overview-copilot-connector)
