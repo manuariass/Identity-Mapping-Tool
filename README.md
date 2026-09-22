@@ -1,4 +1,7 @@
 # Identity-Mapping-Tool
+
+[Open the hosted Identity Mapping Builder](https://manuariass.github.io/Identity-Mapping-Tool/)
+
 # Identity Mapping Builder for Microsoft 365 Copilot Connectors
 
 > Generate correct identity-mapping expressions for a Copilot connector — before a misconfiguration reaches production.
@@ -61,29 +64,11 @@ Because the output uses the connector's own parameter model, there is no transla
 
 ## Getting started
 
-<!-- TODO: replace this section with the real install and run steps for your stack -->
+Open the [hosted Identity Mapping Builder](https://manuariass.github.io/Identity-Mapping-Tool/)
+in a modern browser. No installation is required, and all processing stays in the browser.
 
-### Prerequisites
-
-- <!-- TODO: runtime requirement, e.g. Node.js 18+ / Python 3.10+ / a modern browser -->
-- Access to the data source's identity schema (you need to know which field carries the identity)
-- Permissions to configure the connector in the Microsoft 365 admin center
-
-### Install
-
-```bash
-git clone <YOUR-REPO-URL>
-cd identity-mapping-builder
-<INSTALL-COMMAND>   # e.g. npm install
-```
-
-### Run
-
-```bash
-<RUN-COMMAND>   # e.g. npm start
-```
-
-<!-- TODO: if this is a hosted/static tool, replace the above with the URL and delete the install steps -->
+You need access to the data source's identity schema and permission to configure the
+connector in the Microsoft 365 admin center.
 
 ---
 
