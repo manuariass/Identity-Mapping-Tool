@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Identity Mapping Builder — Microsoft 365 Copilot connectors</title>
+<style>
+:root{
+  --bg:#f5f4fa; --surface:#fff; --ink:#241f33; --muted:#69627e;
+  --line:#dcd7ea; --accent:#6c4fe0; --accent-soft:#efebfb;
+  --ok:#0d7f6a; --ok-soft:#e2f5f0; --bad:#bd3d13; --bad-soft:#fdeee7;
+  --warn:#87680c; --warn-soft:#fbf2d6; --code:#f1eff8; --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#161320; --surface:#201c2c; --ink:#eeebf6; --muted:#a49dba;
+    --line:#3a3350; --accent:#a893ff; --accent-soft:#2b2440;
+    --ok:#4fd1ac; --ok-soft:#153029; --bad:#ff9d6d; --bad-soft:#382217;
+    --warn:#e6c568; --warn-soft:#302914; --code:#292338;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font-family:"Segoe UI",system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.5}
+.wrap{max-width:920px;margin-inline:auto;padding:30px 20px 70px}
+header h1{font-size:27px;margin:0 0 6px;letter-spacing:-.01em}
+header p.sub{margin:0 0 4px;color:var(--muted)}
+header p.src{margin:0;color:var(--muted);font-size:12.5px}
+.card{background:var(--surface);border:1px solid var(--line);
+ border-radius:var(--r);padding:22px;margin-block-start:18px}
+h2{font-size:16.5px;margin:0 0 4px;display:flex;align-items:center}
+.step{display:inline-flex;align-items:center;justify-content:center;
+ inline-size:24px;block-size:24px;border-radius:50%;background:var(--accent);
+ color:#fff;font-size:12.5px;font-weight:700;margin-inline-end:9px;flex:none}
+.hint{color:var(--muted);font-size:13px;margin:0 0 16px;padding-inline-start:33px}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);
+ text-transform:uppercase;letter-spacing:.04em;margin-block-end:6px}
+input[type=text],select{inline-size:100%;padding:10px 12px;border:1px solid var(--line);
+ border-radius:8px;background:var(--bg);color:var(--ink);font-size:15px;font-family:inherit}
+input[type=text]:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.mono,input.mono{font-family:"Cascadia Code",Consolas,"Courier New",monospace}
+#out{font-size:18px;padding:13px 14px;font-weight:600}
+.prow{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1.2fr) 34px;
+ gap:10px;align-items:start;margin-block-end:10px}
+.prow .tok{font-family:"Cascadia Code",Consolas,monospace;font-weight:700;
+ background:var(--accent);color:#fff;padding:9px 0;border-radius:6px;
+ font-size:13px;text-align:center}
+.vhint{font-size:11.5px;color:var(--muted);margin-block-start:3px;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.colhead{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1.2fr) 34px;
+ gap:10px;margin-block-end:6px}
+.colhead label{margin:0}
+button{font-family:inherit;font-size:13.5px;padding:9px 15px;border-radius:8px;
+ border:1px solid var(--line);background:var(--surface);color:var(--ink);
+ cursor:pointer;font-weight:600}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.primary:hover{opacity:.9;color:#fff}
+button.x{border:none;background:none;color:var(--muted);padding:8px 4px;font-size:16px}
+button.x:hover{color:var(--bad)}
+.acts{display:flex;gap:9px;flex-wrap:wrap;margin-block-start:14px}
+.cfg{border:2px solid var(--ok);border-radius:var(--r);overflow:hidden}
+.cfg.bad{border-color:var(--bad)}
+.cfg-head{background:var(--ok);color:#fff;padding:9px 16px;font-size:12.5px;
+ font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.cfg.bad .cfg-head{background:var(--bad)}
+.row{display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px;padding:11px 16px;
+ border-block-start:1px solid var(--line);align-items:baseline}
+.row:first-of-type{border-block-start:none}
+.row .k{font-size:12px;font-weight:600;color:var(--muted);
+ text-transform:uppercase;letter-spacing:.04em}
+.row .v{font-size:15px;font-weight:600;word-break:break-word}
+.row .v.mono{font-size:14.5px}
+.row .n{font-size:12.5px;color:var(--muted);font-weight:400;margin-block-start:3px}
+.final{background:var(--ok-soft);padding:13px 16px;border-block-start:1px solid var(--line)}
+.cfg.bad .final{background:var(--bad-soft)}
+.final .lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;
+ color:var(--muted);font-weight:600}
+.final .val{font-family:"Cascadia Code",Consolas,monospace;font-size:17px;
+ font-weight:700;color:var(--ok);margin-block-start:4px;word-break:break-all}
+.cfg.bad .final .val{color:var(--bad)}
+.match{font-size:12.5px;font-weight:600;margin-block-start:5px}
+pre.sum{background:var(--code);border:1px solid var(--line);border-radius:8px;
+ padding:15px;overflow-x:auto;font-size:13px;margin:0;
+ font-family:"Cascadia Code",Consolas,monospace;white-space:pre-wrap}
+.note{border-inline-start:3px solid var(--warn);background:var(--warn-soft);
+ padding:11px 15px;border-radius:0 8px 8px 0;font-size:13.5px;margin-block-start:12px}
+.note b{color:var(--warn)}
+.note.bad{border-color:var(--bad);background:var(--bad-soft)}
+.note.bad b{color:var(--bad)}
+.note.info{border-color:var(--accent);background:var(--accent-soft)}
+.note.info b{color:var(--accent)}
+ul.lim{margin:8px 0 0;padding-inline-start:20px;font-size:13.5px}
+ul.lim li{margin-block-end:6px}
+.hide{display:none}
+footer{margin-block-start:26px;font-size:12px;color:var(--muted);text-align:center}
+@media(max-width:640px){
+  .prow,.colhead{grid-template-columns:30px minmax(0,1fr) 30px}
+  .prow .vwrap,.colhead .vh{grid-column:2/4}
+  .row{grid-template-columns:1fr;gap:2px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Identity Mapping Builder</h1>
+  <p class="sub">Same wizard, reversed &mdash; you type the identity you expect, and the regular expressions and the formula are worked out for you.</p>
+  <p class="src">Follows <span class="mono">learn.microsoft.com/microsoft-365/copilot/connectors/map-non-entra-id</span> and <span class="mono">/map-entra-id</span></p>
+</header>
+
+<section class="card">
+  <h2><span class="step">1</span>Identity source</h2>
+  <p class="hint">How the data source stores its user identities.</p>
+  <select id="mode">
+    <option value="nonmeid">Non-ME-ID &mdash; the source has its own identities</option>
+    <option value="meid">ME-ID &mdash; the source already uses Microsoft Entra identities</option>
+  </select>
+  <div id="modenote"></div>
+</section>
+
+<section class="card" id="targetCard">
+  <h2><span class="step">2</span>Microsoft Entra user property</h2>
+  <p class="hint">The Entra property the mapped identity has to match. Suggested from the identity you type in step 4 &mdash; change it if you need a different one.</p>
+  <select id="target"></select>
+</section>
+
+<section class="card">
+  <h2><span class="step" id="s3">3</span><span id="propTitle">Non-Microsoft Entra user properties to map</span></h2>
+  <p class="hint" id="propHint">Add one or more. The sample value is what that property normally holds &mdash; replace it with a real value from your data source.</p>
+  <div class="colhead">
+    <div></div>
+    <div><label>Property</label></div>
+    <div class="vh"><label>Value it holds</label></div>
+    <div></div>
+  </div>
+  <div id="props"></div>
+  <div class="acts"><button id="add">+ Add property</button></div>
+</section>
+
+<section class="card">
+  <h2><span class="step" id="s4">4</span>Expected result</h2>
+  <p class="hint">Instead of writing the formula, type the identity this mapping has to produce.</p>
+  <input type="text" class="mono" id="out" value="alexis.vasquez@contoso.com"
+         placeholder="e.g. alexis.vasquez@contoso.com" spellcheck="false" autocomplete="off">
+</section>
+
+<section class="card">
+  <h2><span class="step" id="s5">5</span>Generated configuration &amp; preview</h2>
+  <p class="hint">Enter these values in the wizard, field by field. The preview runs the formula forward against your sample values.</p>
+  <div id="cfg"></div>
+  <div id="warn"></div>
+  <div class="acts">
+    <button class="primary" id="copy">Copy configuration</button>
+    <button id="reset">Start over</button>
+  </div>
+</section>
+
+<section class="card">
+  <h2><span class="step">&#9998;</span>Summary to copy</h2>
+  <p class="hint">Every field of the wizard, in order.</p>
+  <pre class="sum" id="summary">&mdash;</pre>
+</section>
+
+<section class="card">
+  <h2><span class="step">!</span>Before you publish</h2>
+  <ul class="lim">
+    <li><b>One mapping applies to every user.</b> Conditional mappings are not supported.</li>
+    <li><b>You cannot change the mapping after the connection is published.</b></li>
+    <li><b>Regular expressions extract, they never transform.</b> They cannot change case, reorder characters, or add anything that is not already in the value &mdash; so if what you expect is not literally inside the property, no expression can produce it.</li>
+    <li><b>Regular expressions are not supported on the ME-ID path.</b> Microsoft Entra user properties go into the formula whole.</li>
+    <li>Replace the sample values with data your connector really returns. Service accounts, contractors and merged domains are where a mapping usually breaks.</li>
+    <li>The wizard Preview shows five random users. Green there does not prove every user maps.</li>
+  </ul>
+</section>
+
+<footer>Everything stays in this page. Nothing is sent anywhere.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ---- the two dropdowns, exactly as the wizard lists them ---- */
+
+/* Microsoft Entra user properties, offered when the source is ME-ID. */
+var MEID_PROPS = [
+  { id:"firstName", label:"First Name",           s:"Alexis" },
+  { id:"lastName",  label:"Last Name",            s:"Vasquez" },
+  { id:"upn",       label:"User Principal Name",  s:"alexis.vasquez@contoso.com" },
+  { id:"aadId",     label:"AAD Id",               s:"58006c96-9e6e-45ea-8c88-4a56851eefad" },
+  { id:"domain",    label:"Domain",               s:"contoso.com" }
+];
+
+/* Non-Entra user properties, offered when the source is non-ME-ID. */
+var NON_PROPS = [
+  { id:"Name",                 label:"Name",                 s:"Alexis Vasquez" },
+  { id:"Alias",                label:"Alias",                s:"avasqu" },
+  { id:"Email",                label:"Email",                s:"alexis.vasquez@contoso.com" },
+  { id:"FirstName",            label:"FirstName",            s:"Alexis" },
+  { id:"LastName",             label:"LastName",             s:"Vasquez" },
+  { id:"FederationIdentifier", label:"FederationIdentifier", s:"alexis.vasquez@contoso.com" },
+  { id:"UserName",             label:"UserName",             s:"alexis.vasquez@contoso.com.prod" }
+];
+
+/* Microsoft Entra user property to map INTO, offered when the source is non-ME-ID. */
+var ENTRA_TARGETS = [
+  { id:"ActiveDirectorySId", label:"ActiveDirectorySId",
+    ex:"S-1-5-21-453406510-812318184-4183662089",
+    test:function(v){ return /^S-\d+-\d+(-\d+)+$/i.test(v); } },
+  { id:"UserPrincipalName",  label:"UserPrincipalName",
+    ex:"alexis.vasquez@contoso.com",
+    test:function(v){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v); } },
+  { id:"AadId",              label:"AadId",
+    ex:"58006c96-9e6e-45ea-8c88-4a56851eefad",
+    test:function(v){ return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(v); } },
+  { id:"Mail",               label:"Mail",
+    ex:"alexis.vasquez@contoso.com",
+    test:function(v){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v); } }
+];
+
+function propList(mode){ return mode === "meid" ? MEID_PROPS : NON_PROPS; }
+
+function sampleFor(mode, id){
+  var L = propList(mode);
+  for(var i=0;i<L.length;i++) if(L[i].id === id) return L[i].s;
+  return "";
+}
+function labelFor(mode, id){
+  var L = propList(mode);
+  for(var i=0;i<L.length;i++) if(L[i].id === id) return L[i].label;
+  return id;
+}
+
+/* Suggest the Entra user property from the shape of the expected identity.
+   GUID and SID are unambiguous; an email defaults to UserPrincipalName. */
+function suggestTarget(out){
+  out = (out||"").trim();
+  if(ENTRA_TARGETS[2].test(out)) return "AadId";
+  if(ENTRA_TARGETS[0].test(out)) return "ActiveDirectorySId";
+  return "UserPrincipalName";
+}
+function targetById(id){
+  for(var i=0;i<ENTRA_TARGETS.length;i++) if(ENTRA_TARGETS[i].id === id) return ENTRA_TARGETS[i];
+  return ENTRA_TARGETS[1];
+}
+
+/* ---- the extractions a regular expression can express ---- */
+var CUTS = [
+  { rx:".*",              why:"the whole value",
+    f:function(v){ return v; } },
+  { rx:"^([^@]+)",        why:"everything before the @",
+    f:function(v){ var i=v.indexOf("@"); return i<0?null:v.slice(0,i); } },
+  { rx:"[^@]+$",          why:"everything after the @",
+    f:function(v){ var i=v.lastIndexOf("@"); return i<0?null:v.slice(i+1); } },
+  { rx:"[^\\\\]+$",       why:"the name after the backslash",
+    f:function(v){ var i=v.lastIndexOf("\\"); return i<0?null:v.slice(i+1); } },
+  { rx:"^([^\\\\]+)",     why:"the domain before the backslash",
+    f:function(v){ var i=v.indexOf("\\"); return i<0?null:v.slice(0,i); } },
+  { rx:"CN=([^,]+)",      why:"the CN value",
+    f:function(v){ var m=/CN=([^,]+)/i.exec(v); return m?m[1]:null; } },
+  { rx:"^(.+)\\.[^.]+$",  why:"everything except the last dot-segment",
+    f:function(v){ var m=/^(.+)\.[^.]+$/.exec(v); return m?m[1]:null; } },
+  { rx:"^([^ ]+)",        why:"the first word",
+    f:function(v){ var m=/^([^ ]+)/.exec(v); return m?m[1]:null; } },
+  { rx:"[^ ]+$",          why:"the last word",
+    f:function(v){ var m=/([^ ]+)$/.exec(v); return m?m[1]:null; } },
+  { rx:"^([^.]+)",        why:"everything before the first dot",
+    f:function(v){ var i=v.indexOf("."); return i<0?null:v.slice(0,i); } },
+  { rx:"([^.]+)$",        why:"everything after the last dot",
+    f:function(v){ var i=v.lastIndexOf("."); return i<0?null:v.slice(i+1); } },
+  { rx:"(\\d+)",          why:"the digits",
+    f:function(v){ var m=/(\d+)/.exec(v); return m?m[1]:null; } },
+  { rx:"[^-]+$",          why:"the block after the last hyphen",
+    f:function(v){ var i=v.lastIndexOf("-"); return i<0?null:v.slice(i+1); } },
+  { rx:"^([^-]+)",        why:"the block before the first hyphen",
+    f:function(v){ var i=v.indexOf("-"); return i<0?null:v.slice(0,i); } },
+  { rx:"[^{}]+",          why:"the value without the braces",
+    f:function(v){ var m=/^\{(.+)\}$/.exec(v); return m?m[1]:null; } },
+  { rx:"^(.{3})",         why:"the first three characters",
+    f:function(v){ return v.length>3 ? v.slice(0,3) : null; } },
+  { rx:"^(.{2})",         why:"the first two characters",
+    f:function(v){ return v.length>2 ? v.slice(0,2) : null; } },
+  { rx:"^(.)",            why:"the first character (the initial)",
+    f:function(v){ return v.length>1 ? v.charAt(0) : null; } }
+];
+/* ME-ID has no regex step, so only the whole value is available. */
+var WHOLE = [ CUTS[0] ];
+
+function applyRx(pattern, sample){
+  if(pattern === "") return { ok:false, val:"" };
+  var re; try{ re = new RegExp(pattern); }catch(e){ return { ok:false, val:"" }; }
+  var m = re.exec(sample);
+  if(m === null) return { ok:false, val:"" };
+  var v = (m.length > 1 && m[1] !== undefined) ? m[1] : m[0];
+  return v === "" ? { ok:false, val:"" } : { ok:true, val:v };
+}
+
+
+/* ---- is a literal in the formula safe to hardcode? ----
+   A literal applies to EVERY user, so a piece of THIS user's identity that
+   ends up as a literal is a broken mapping, not a working one.             */
+
+function lcsLen(a, b){
+  a = a.toLowerCase(); b = b.toLowerCase();
+  var best = 0, i, j, prev = [], cur;
+  for(i=0;i<a.length;i++){
+    cur = [];
+    for(j=0;j<b.length;j++){
+      cur[j] = (a.charAt(i) === b.charAt(j)) ? ((i && j ? (prev[j-1]||0) : 0) + 1) : 0;
+      if(cur[j] > best) best = cur[j];
+    }
+    prev = cur;
+  }
+  return best;
+}
+function hasAlnum(s){ return /[A-Za-z0-9]/.test(s); }
+
+/* Split the formula into literal pieces and locate each one inside the output. */
+function literalsOf(formula, rows, regex){
+  var out = [], pos = 0, re = /\{(\d+)\}/g, last = 0, m;
+  while((m = re.exec(formula)) !== null){
+    if(m.index > last){
+      var t = formula.slice(last, m.index);
+      out.push({ text:t, at:pos }); pos += t.length;
+    }
+    var r = rows[parseInt(m[1],10)];
+    var v = r ? (regex ? (applyRx(r.rx, r.value).val || "") : r.value) : "";
+    pos += v.length;
+    last = re.lastIndex;
+  }
+  if(last < formula.length) out.push({ text:formula.slice(last), at:pos });
+  return out.filter(function(l){ return hasAlnum(l.text); });
+}
+
+function checkLiterals(formula, rows, out, regex){
+  var lits = literalsOf(formula, rows, regex);
+  var atSign = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(out) ? out.indexOf("@") : -1;
+  var bad = [], warn = [];
+
+  /* Is any part of the local part produced by a property? */
+  var localIsAllLiteral = false;
+  if(atSign >= 0){
+    var covered = 0, pos2 = 0, re2 = /\{(\d+)\}/g, last2 = 0, m2;
+    while((m2 = re2.exec(formula)) !== null){
+      pos2 += m2.index - last2;
+      var rr = rows[parseInt(m2[1],10)];
+      var vv = rr ? (regex ? (applyRx(rr.rx, rr.value).val || "") : rr.value) : "";
+      if(pos2 < atSign) covered += Math.min(vv.length, atSign - pos2);
+      pos2 += vv.length;
+      last2 = re2.lastIndex;
+    }
+    localIsAllLiteral = (covered === 0);
+  }
+  lits.forEach(function(l){
+    if(atSign >= 0 && l.at >= atSign) return;          /* the domain - constant */
+    var piece = (atSign >= 0 && l.at + l.text.length > atSign)
+              ? l.text.slice(0, atSign - l.at)          /* keep only the local part */
+              : l.text;
+    var shown = piece.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "");
+    if(shown === "") return;
+
+    /* Does this literal repeat something the user's own data contains? */
+    var hit = null;
+    rows.forEach(function(r){
+      var n = lcsLen(shown, r.value);
+      var need = Math.min(3, shown.length);
+      if(n >= need && n >= shown.length / 2 && !hit) hit = r;
+    });
+    if(hit){ bad.push({ text:shown, why:"userdata", from:hit }); return; }
+
+    /* Nothing from any property reaches the local part - the whole
+       identity would be the same constant for every user. */
+    if(atSign >= 0 && localIsAllLiteral){
+      bad.push({ text:shown, why:"localpart" });
+      return;
+    }
+    warn.push({ text:shown });
+  });
+  return { bad:bad, warn:warn };
+}
+
+/* ---- MAIN ----
+   cfg = { mode:"meid"|"nonmeid",
+           target:"UserPrincipalName"|...   (non-ME-ID only, optional),
+           props:[{id, value?}],
+           out:"the identity the admin expects" }                              */
+function build(cfg){
+  var mode  = cfg.mode === "meid" ? "meid" : "nonmeid";
+  var out   = (cfg.out || "").trim();
+  var regex = (mode === "nonmeid");
+
+  var rows = (cfg.props || []).map(function(p){
+    var v = (p.value && String(p.value).trim()) ? String(p.value).trim() : sampleFor(mode, p.id);
+    return { id:p.id, label:labelFor(mode, p.id), value:v,
+             rx:null, why:"", extracted:"", used:false };
+  }).filter(function(r){ return r.id; });
+
+  var target = regex ? targetById(cfg.target || suggestTarget(out)) : null;
+  var base = { ok:false, mode:mode, regex:regex, rows:rows, out:out,
+               target:target, unused:[], caseIssue:[], formula:"", result:"" };
+
+  if(rows.length === 0){ base.reason = "noprops"; return base; }
+  if(out === "")       { base.reason = "noout";   return base; }
+
+  var missing = rows.filter(function(r){ return r.value === ""; });
+  if(missing.length){ base.reason = "novalue"; base.missing = missing; return base; }
+
+  /* Longest extraction whose result really appears inside the expected identity. */
+  var pool = regex ? CUTS : WHOLE;
+  rows.forEach(function(r){
+    var best = null, bl = 0;
+    pool.forEach(function(c){
+      var got = c.f(r.value);
+      if(got === null || got === "") return;
+      if(out.indexOf(got) < 0) return;
+      if(got.length > bl){ bl = got.length; best = { c:c, got:got }; }
+    });
+    if(best){ r.rx = regex ? best.c.rx : null; r.why = best.c.why; r.extracted = best.got; }
+  });
+
+  /* Longest contribution first, so one token never swallows another. */
+  var order = rows.map(function(r,i){ return { r:r, i:i }; })
+                  .filter(function(x){ return x.r.extracted !== ""; })
+                  .sort(function(a,b){ return b.r.extracted.length - a.r.extracted.length; });
+
+  var work = out;
+  order.forEach(function(x){
+    var at = work.indexOf(x.r.extracted);
+    if(at >= 0){
+      /* Only the first occurrence: a one-character contribution such as an
+         initial must not also replace the same letter inside the domain. */
+      var mark = "\u0000" + new Array(x.i + 1).join("\u0002") + "\u0001";
+      work = work.slice(0, at) + mark + work.slice(at + x.r.extracted.length);
+      x.r.used = true;
+    }
+  });
+  var formula = work.replace(/\u0000(\u0002*)\u0001/g, function(_, u){ return "{" + u.length + "}"; });
+
+  /* Run it forward - this is the preview. */
+  var missingTok = null;
+  var result = formula.replace(/\{(\d+)\}/g, function(_, n){
+    var i = parseInt(n,10), r = rows[i];
+    if(!r) { missingTok = i; return "{"+i+"}"; }
+    if(!regex) return r.value;
+    var a = applyRx(r.rx, r.value);
+    if(!a.ok){ missingTok = i; return "{"+i+"}"; }
+    return a.val;
+  });
+
+  var unused = rows.filter(function(r){ return !r.used; });
+  var caseIssue = rows.filter(function(r){
+    return r.value && out.indexOf(r.value) < 0 &&
+           out.toLowerCase().indexOf(r.value.toLowerCase()) >= 0;
+  });
+
+  base.formula = formula;
+  base.result  = result;
+  base.unused  = unused;
+  base.caseIssue = caseIssue;
+  base.ok = (missingTok === null) && (result === out) && rows.some(function(r){ return r.used; });
+  base.reason = base.ok ? "" : "mismatch";
+
+  /* A literal is applied to every user. Reject one that is really this
+     user's own data - it would map the whole tenant to one identity. */
+  if(base.ok){
+    var lit = checkLiterals(formula, rows, out, regex);
+    base.literals = lit.warn;
+    if(lit.bad.length){
+      base.ok = false;
+      base.reason = "literal";
+      base.badLiterals = lit.bad;
+    }
+  } else {
+    base.literals = [];
+  }
+
+  /* Does the expected identity actually look like the chosen Entra property? */
+  base.targetMismatch = (regex && base.ok && target && !target.test(out)) ? target : null;
+  return base;
+}
+
+
+/* ---------------- UI ---------------- */
+var $ = function(id){ return document.getElementById(id); };
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+function defaults(mode){
+  return mode === "meid"
+    ? { mode:"meid",    props:[{ id:"upn",   value:"", touched:false }],
+        target:"UserPrincipalName", out:"alexis.vasquez@contoso.com" }
+    : { mode:"nonmeid", props:[{ id:"Email", value:"", touched:false }],
+        target:"UserPrincipalName", out:"alexis.vasquez@contoso.com" };
+}
+var state = defaults("nonmeid");
+var targetTouched = false;
+
+function fillTargets(){
+  var sel = $("target"); sel.textContent = "";
+  ENTRA_TARGETS.forEach(function(t){
+    var o = document.createElement("option");
+    o.value = t.id; o.textContent = t.label + "   \u2014   e.g. " + t.ex;
+    sel.appendChild(o);
+  });
+  sel.value = state.target;
+}
+
+function renderProps(){
+  var host = $("props"); host.textContent = "";
+  var lib = propList(state.mode);
+  state.props.forEach(function(p, i){
+    var row = document.createElement("div"); row.className = "prow";
+
+    var tok = document.createElement("div");
+    tok.className = "tok"; tok.textContent = "{" + i + "}";
+    row.appendChild(tok);
+
+    var sc = document.createElement("div");
+    var sel = document.createElement("select");
+    lib.forEach(function(d){
+      var o = document.createElement("option");
+      o.value = d.id; o.textContent = d.label; sel.appendChild(o);
+    });
+    sel.value = p.id;
+    sel.addEventListener("change", function(){
+      p.id = sel.value;
+      if(!p.touched){ p.value = ""; }
+      renderProps(); render();
+    });
+    sc.appendChild(sel);
+    row.appendChild(sc);
+
+    var vc = document.createElement("div"); vc.className = "vwrap";
+    var vin = document.createElement("input");
+    vin.type = "text"; vin.className = "mono"; vin.spellcheck = false;
+    vin.autocomplete = "off";
+    vin.value = p.touched ? p.value : sampleFor(state.mode, p.id);
+    vin.placeholder = "Paste a real value";
+    vin.addEventListener("input", function(){
+      p.value = vin.value; p.touched = true;
+      var h = vc.querySelector(".vhint");
+      if(h) h.textContent = "your value";
+      render();
+    });
+    vc.appendChild(vin);
+    var vh = document.createElement("div");
+    vh.className = "vhint";
+    vh.textContent = p.touched ? "your value" : "sample \u2014 replace with a real value";
+    vc.appendChild(vh);
+    row.appendChild(vc);
+
+    var xc = document.createElement("div");
+    if(state.props.length > 1){
+      var x = document.createElement("button");
+      x.className = "x"; x.textContent = "\u2715"; x.title = "Remove this property";
+      x.addEventListener("click", function(){
+        state.props.splice(i, 1); renderProps(); render();
+      });
+      xc.appendChild(x);
+    }
+    row.appendChild(xc);
+    host.appendChild(row);
+  });
+}
+
+function applyMode(){
+  var meid = state.mode === "meid";
+  $("targetCard").className = meid ? "card hide" : "card";
+  $("s3").textContent = meid ? "2" : "3";
+  $("s4").textContent = meid ? "3" : "4";
+  $("s5").textContent = meid ? "4" : "5";
+  $("propTitle").textContent = meid
+    ? "Microsoft Entra user properties to map"
+    : "Non-Microsoft Entra user properties to map";
+  $("propHint").textContent = meid
+    ? "Add one or more. These go into the formula whole \u2014 the ME-ID path has no regular expression step."
+    : "Add one or more. The sample value is what that property normally holds \u2014 replace it with a real value from your data source.";
+  $("modenote").innerHTML = meid
+    ? '<div class="note info"><b>Microsoft Entra ID \u2192 Federation ID.</b> Regular expressions against Microsoft Entra user properties are not supported on this path, so each property is used whole and only the formula is generated.</div>'
+    : '<div class="note info"><b>Non-Entra ID \u2192 Microsoft Entra.</b> Each selected property gets its own regular expression, and the formula combines them.</div>';
+}
+
+function render(){
+  if(!targetTouched && state.mode !== "meid"){
+    state.target = suggestTarget(state.out);
+    $("target").value = state.target;
+  }
+  var r = build(state);
+  var host = $("cfg"), wbox = $("warn");
+  wbox.textContent = "";
+
+  if(!r.ok){
+    var msg;
+    if(r.reason === "noprops")      msg = "Add at least one property.";
+    else if(r.reason === "noout")   msg = "Type the identity this mapping has to produce.";
+    else if(r.reason === "novalue") msg = "Fill in a sample value for " +
+        r.missing.map(function(m){ return "\u201c" + m.label + "\u201d"; }).join(" and ") + ".";
+    else if(r.reason === "literal"){
+      var b = r.badLiterals.map(function(x){ return "\u201c" + x.text + "\u201d"; }).join(" and ");
+      msg = "The only formula that reaches this result would hardcode " + b +
+            ", and a formula is applied to every user \u2014 so every user in the tenant would map " +
+            "to the same identity. " + spare() +
+            " If a sample value above is not what your source really returns, correct it first.";
+    }
+    else {
+      var un = r.unused.map(function(u){ return u.label; });
+      msg = (un.length
+        ? "Nothing in " + un.map(function(n){ return "\u201c" + n + "\u201d"; }).join(" or ") +
+          " appears inside \u201c" + r.out + "\u201d, so no expression can extract it. "
+        : "These properties cannot produce \u201c" + r.out + "\u201d. ") + spare();
+    }
+    host.innerHTML = '<div class="cfg bad"><div class="cfg-head">Not possible with these inputs</div>' +
+      '<div class="row"><div class="k">Why</div><div class="v" style="font-weight:400">' +
+      esc(msg) + '</div></div></div>';
+
+    if(r.caseIssue && r.caseIssue.length){
+      wbox.appendChild(note("bad", "<b>Only the capitalisation differs.</b> " +
+        esc(r.caseIssue.map(function(c){ return c.label + " holds \u201c" + c.value + "\u201d"; }).join(", ")) +
+        ", and you asked for \u201c" + esc(r.out) + "\u201d. Nothing in this wizard can change case \u2014 " +
+        "match the capitalisation the source really stores, or pick a property that already holds it that way."));
+    }
+    if(state.mode === "meid" && (r.reason === "mismatch" || r.reason === "literal")){
+      wbox.appendChild(note("", "<b>This may be the ME-ID limitation.</b> Microsoft Entra user properties " +
+        "cannot be cut down with a regular expression on this path, so a partial value \u2014 the local part " +
+        "of a UPN, for example \u2014 cannot be produced. Switch the identity source to Non-ME-ID if the data " +
+        "source genuinely stores its own identities."));
+    }
+    $("summary").textContent = "\u2014";
+    return;
+  }
+
+  var rowsHtml = r.rows.map(function(x, i){
+    var note = x.why
+      ? (r.regex ? "Takes " + x.why + " of \u201c" + x.value + "\u201d \u2192 " + x.extracted
+                 : "Used whole: \u201c" + x.value + "\u201d")
+      : "";
+    if(r.regex) return row("{" + i + "}  " + x.label + " \u2014 regex", x.rx || "\u2014", note, true);
+    return row("{" + i + "}  " + x.label, x.value, note, true);
+  }).join("");
+
+  host.innerHTML =
+    '<div class="cfg"><div class="cfg-head">Ready to enter in the wizard</div>' +
+    row("Identity source", r.mode === "meid" ? "ME-ID" : "Non-ME-ID",
+        r.mode === "meid" ? "Microsoft Entra ID \u2192 Federation ID" : "Non-Entra ID \u2192 Microsoft Entra", false) +
+    (r.target ? row("Microsoft Entra user property", r.target.label, "e.g. " + r.target.ex, false) : "") +
+    rowsHtml +
+    row("Formula", r.formula, "", true) +
+    '<div class="final"><div class="lbl">Preview \u2014 result of the formula</div>' +
+    '<div class="val">' + esc(r.result) + '</div>' +
+    '<div class="match">\u2713 matches the expected result</div></div></div>';
+
+  if(r.targetMismatch){
+    wbox.appendChild(note("", "<b>Check the Entra property.</b> You selected " +
+      esc(r.targetMismatch.label) + ", but \u201c" + esc(r.out) + "\u201d does not look like one (" +
+      esc(r.targetMismatch.ex) + "). The mapping will build, but it will match no user if the property " +
+      "does not hold values in that shape."));
+  }
+  if(r.literals && r.literals.length){
+    wbox.appendChild(note("", "<b>Hardcoded in the formula:</b> " +
+      esc(r.literals.map(function(l){ return "\u201c" + l.text + "\u201d"; }).join(", ")) +
+      ". Every user gets exactly that text there. Fine if it is a real constant (a fixed prefix or " +
+      "domain) \u2014 wrong if it belongs to this one user."));
+  }
+  if(r.unused.length){
+    wbox.appendChild(note("", "<b>Not used in the formula:</b> " +
+      esc(r.unused.map(function(u){ return u.label; }).join(", ")) +
+      ". Nothing from " + (r.unused.length > 1 ? "them" : "it") +
+      " appears in the expected result, so " + (r.unused.length > 1 ? "they add" : "it adds") +
+      " nothing \u2014 remove " + (r.unused.length > 1 ? "them" : "it") + " to keep the mapping simple."));
+  }
+  summary(r);
+}
+
+/* Which properties are still available to add? */
+function spare(){
+  var used = state.props.map(function(p){ return p.id; });
+  var left = propList(state.mode).filter(function(d){ return used.indexOf(d.id) < 0; })
+                                 .map(function(d){ return d.label; });
+  return left.length
+    ? "Add the property that actually holds it \u2014 still available: " + left.join(", ") + "."
+    : "Every property is already selected, so the data source does not carry this value.";
+}
+
+function note(kind, html){
+  var d = document.createElement("div");
+  d.className = "note" + (kind ? " " + kind : "");
+  d.innerHTML = html;
+  return d;
+}
+function row(k, v, n, mono){
+  return '<div class="row"><div class="k">' + esc(k) + '</div><div><div class="v' +
+    (mono ? " mono" : "") + '">' + esc(v) + '</div>' +
+    (n ? '<div class="n">' + esc(n) + '</div>' : "") + '</div></div>';
+}
+
+function summary(r){
+  var L = [];
+  L.push("IDENTITY SOURCE");
+  L.push("  " + (r.mode === "meid" ? "ME-ID" : "Non-ME-ID"));
+  if(r.target){
+    L.push("");
+    L.push("MICROSOFT ENTRA USER PROPERTY");
+    L.push("  " + r.target.label);
+  }
+  L.push("");
+  L.push(r.mode === "meid" ? "MICROSOFT ENTRA USER PROPERTIES TO MAP"
+                           : "NON-MICROSOFT ENTRA USER PROPERTIES TO MAP");
+  r.rows.forEach(function(x, i){
+    L.push("  {" + i + "}  property : " + x.label);
+    if(r.regex) L.push("       regex    : " + (x.rx || "(not used)"));
+    L.push("       value    : " + x.value + (r.regex && x.extracted ? "   \u2192   " + x.extracted : ""));
+  });
+  L.push("");
+  L.push("FORMULA");
+  L.push("  " + r.formula);
+  L.push("");
+  L.push("PREVIEW");
+  L.push("  " + r.result);
+  $("summary").textContent = L.join("\n");
+}
+
+/* ---------------- wiring ---------------- */
+$("mode").addEventListener("change", function(e){
+  state = defaults(e.target.value);
+  targetTouched = false;
+  $("out").value = state.out;
+  fillTargets(); applyMode(); renderProps(); render();
+});
+$("target").addEventListener("change", function(e){
+  state.target = e.target.value; targetTouched = true; render();
+});
+$("add").addEventListener("click", function(){
+  var lib = propList(state.mode);
+  var used = state.props.map(function(p){ return p.id; });
+  var next = lib.filter(function(d){ return used.indexOf(d.id) < 0; })[0] || lib[0];
+  state.props.push({ id: next.id, value:"", touched:false });
+  renderProps(); render();
+});
+$("out").addEventListener("input", function(e){ state.out = e.target.value; render(); });
+$("copy").addEventListener("click", function(){
+  var txt = $("summary").textContent, btn = $("copy");
+  var done = function(){
+    btn.textContent = "Copied";
+    setTimeout(function(){ btn.textContent = "Copy configuration"; }, 1600);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done, function(){ fb(txt, done); });
+  } else fb(txt, done);
+});
+function fb(txt, done){
+  var ta = document.createElement("textarea");
+  ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); done(); }catch(e){}
+  document.body.removeChild(ta);
+}
+$("reset").addEventListener("click", function(){
+  state = defaults(state.mode); targetTouched = false;
+  $("out").value = state.out;
+  fillTargets(); applyMode(); renderProps(); render();
+});
+
+fillTargets();
+applyMode();
+renderProps();
+render();
+})();
+</script>
+</body>
+</html>
