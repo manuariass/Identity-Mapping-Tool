@@ -94,15 +94,7 @@ A Salesforce org stores the user identity in `FederationIdentifier`, and those v
 
 ## Supported data sources
 
-<!-- TODO: replace with the actual list the tool supports today -->
-
-| Data source | Typical identity field | Status |
-|---|---|---|
-| Salesforce | `FederationIdentifier` | <!-- TODO --> |
-| ServiceNow | `sys_id` / user email | <!-- TODO --> |
-| Jira | `AccountId` | <!-- TODO --> |
-| Zendesk | user record / email | <!-- TODO --> |
-| Confluence | user key / email | <!-- TODO --> |
+- Supported Copilot Connectors Data Sources
 
 ---
 
